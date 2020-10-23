@@ -18,7 +18,7 @@ pipeline {
     // Checkout Source Code.
     stage('Checkout Source') {
       steps {
-        git branch: 'master',
+        git branch: 'main',
             url: sourceCode
 
         script {
