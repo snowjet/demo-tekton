@@ -21,47 +21,70 @@ data:
       <nodeSelector></nodeSelector>
       <customWorkspaceVolumeEnabled>false</customWorkspaceVolumeEnabled>
       <workspaceVolume class="org.csanchez.jenkins.plugins.kubernetes.volumes.workspace.EmptyDirWorkspaceVolume">
-        <memory>false</memory>
+      <memory>false</memory>
       </workspaceVolume>
       <containers>
-        <org.csanchez.jenkins.plugins.kubernetes.ContainerTemplate>
-          <name>python</name>
-          <image>registry.access.redhat.com/ubi8/python-38</image>
-          <privileged>false</privileged>
-          <alwaysPullImage>true</alwaysPullImage>
-          <workingDir>/tmp</workingDir>
-          <command>/bin/sh -c</command>
-          <args>cat</args>
-          <ttyEnabled>false</ttyEnabled>
-          <resourceRequestCpu>2</resourceRequestCpu>
-          <resourceRequestMemory>2048Mi</resourceRequestMemory>
-          <resourceLimitCpu>2</resourceLimitCpu>
-          <resourceLimitMemory>2048Mi</resourceLimitMemory>
-          <envVars>
-            <!-- Default java is java-11 -->
-            <org.csanchez.jenkins.plugins.kubernetes.model.KeyValueEnvVar>
-              <key>USE_JAVA_VERSION</key>
-              <value>java-1.8.0</value>
-            </org.csanchez.jenkins.plugins.kubernetes.model.KeyValueEnvVar>
-            <org.csanchez.jenkins.plugins.kubernetes.model.KeyValueEnvVar>
-              <key>MAVEN_OPTS</key>
-              <value>-Xms256m -Xmx256m</value>
-            </org.csanchez.jenkins.plugins.kubernetes.model.KeyValueEnvVar>
-            <org.csanchez.jenkins.plugins.kubernetes.model.KeyValueEnvVar>
-              <key>JNLP_MAX_HEAP_UPPER_BOUND_MB</key>
-              <value>64</value>
-            </org.csanchez.jenkins.plugins.kubernetes.model.KeyValueEnvVar>
-          </envVars>
-          <ports />
-          <livenessProbe>
-            <execArgs></execArgs>
-            <timeoutSeconds>0</timeoutSeconds>
-            <initialDelaySeconds>0</initialDelaySeconds>
-            <failureThreshold>0</failureThreshold>
-            <periodSeconds>0</periodSeconds>
-            <successThreshold>0</successThreshold>
-          </livenessProbe>
-        </org.csanchez.jenkins.plugins.kubernetes.ContainerTemplate>
+            <org.csanchez.jenkins.plugins.kubernetes.ContainerTemplate>
+              <name>jnlp</name>
+              <image>quay.io/openshift/origin-jenkins-agent-base</image>
+              <privileged>false</privileged>
+              <alwaysPullImage>true</alwaysPullImage>
+              <workingDir>/tmp</workingDir>
+              <command></command>
+              <args>${computer.jnlpmac} ${computer.name}</args>
+              <ttyEnabled>false</ttyEnabled>
+              <resourceRequestCpu>2</resourceRequestCpu>
+              <resourceRequestMemory>2048Mi</resourceRequestMemory>
+              <resourceLimitCpu>2</resourceLimitCpu>
+              <resourceLimitMemory>2048Mi</resourceLimitMemory>
+              <envVars>
+                <org.csanchez.jenkins.plugins.kubernetes.model.KeyValueEnvVar>
+                  <key>USE_JAVA_VERSION</key>
+                  <value>java-1.8.0</value>
+                </org.csanchez.jenkins.plugins.kubernetes.model.KeyValueEnvVar>
+                <org.csanchez.jenkins.plugins.kubernetes.model.KeyValueEnvVar>
+                  <key>MAVEN_OPTS</key>
+                  <value>-Xms256m -Xmx256m</value>
+                </org.csanchez.jenkins.plugins.kubernetes.model.KeyValueEnvVar>
+                <org.csanchez.jenkins.plugins.kubernetes.model.KeyValueEnvVar>
+                  <key>JNLP_MAX_HEAP_UPPER_BOUND_MB</key>
+                  <value>64</value>
+                </org.csanchez.jenkins.plugins.kubernetes.model.KeyValueEnvVar>
+              </envVars>
+              <ports/>
+              <livenessProbe>
+                <execArgs></execArgs>
+                <timeoutSeconds>0</timeoutSeconds>
+                <initialDelaySeconds>0</initialDelaySeconds>
+                <failureThreshold>0</failureThreshold>
+                <periodSeconds>0</periodSeconds>
+                <successThreshold>0</successThreshold>
+              </livenessProbe>
+            </org.csanchez.jenkins.plugins.kubernetes.ContainerTemplate>
+            <org.csanchez.jenkins.plugins.kubernetes.ContainerTemplate>
+              <name>python</name>
+              <image>registry.access.redhat.com/ubi8/python-38</image>
+              <privileged>false</privileged>
+              <alwaysPullImage>false</alwaysPullImage>
+              <workingDir>/tmp</workingDir>
+              <command>/bin/sh -c</command>
+              <args>cat</args>
+              <ttyEnabled>true</ttyEnabled>
+              <resourceRequestCpu></resourceRequestCpu>
+              <resourceRequestMemory></resourceRequestMemory>
+              <resourceLimitCpu></resourceLimitCpu>
+              <resourceLimitMemory></resourceLimitMemory>
+              <envVars/>
+              <ports/>
+              <livenessProbe>
+                <execArgs></execArgs>
+                <timeoutSeconds>0</timeoutSeconds>
+                <initialDelaySeconds>0</initialDelaySeconds>
+                <failureThreshold>0</failureThreshold>
+                <periodSeconds>0</periodSeconds>
+                <successThreshold>0</successThreshold>
+              </livenessProbe>
+            </org.csanchez.jenkins.plugins.kubernetes.ContainerTemplate>
       </containers>
       <envVars />
       <annotations />

@@ -34,7 +34,6 @@ spec:
           - frontend
         from:
           kind: ImageStreamTag
-          namespace: quote-pipeline
           name: 'frontend:latest'
     - type: ConfigChange
   replicas: 1
@@ -45,7 +44,6 @@ spec:
     deploymentconfig: frontend
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: frontend
         deploymentconfig: frontend
