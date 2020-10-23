@@ -1,0 +1,269 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cfgmap-backend
+data:
+  DATABASE_TYPE: postgresql
+  JSON_QUOTE_PATH: ./quotes/quotes.json
+  external_image_api: ${external_imape_base_url}/api/v1/image
+  external_image_api_v2: ${external_imape_base_url}/api/v2/image
+---
+kind: ImageStream
+apiVersion: image.openshift.io/v1
+metadata:
+  name: backend
+  labels:
+    app: backend
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/instance: backend
+    app.kubernetes.io/name: python
+    app.kubernetes.io/part-of: quotegen
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: '3.6'
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    template.openshift.io/expose-database_name: '{.data[''database-name'']}'
+    template.openshift.io/expose-password: '{.data[''database-password'']}'
+    template.openshift.io/expose-username: '{.data[''database-user'']}'
+  name: database
+  labels:
+    app.kubernetes.io/name: database
+    app.kubernetes.io/part-of: dcaas
+    app.kubernetes.io/component: database   
+stringData:
+  database-name: "${POSTGRESQL_DATABASE}"
+  database-password: "${POSTGRESQL_PASSWORD}"
+  database-user: "${POSTGRESQL_USER}"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  annotations:
+    template.openshift.io/expose-uri: 'postgres://{.spec.clusterIP}:{.spec.ports[?(.name=="database")].port}'
+  name: database
+  labels:
+    app: database
+    app.kubernetes.io/component: database
+    app.kubernetes.io/instance: database
+    app.kubernetes.io/name: database
+    app.kubernetes.io/part-of: quotegen
+    app.openshift.io/version: 'latest'  
+spec:
+  ports:
+    - name: database
+      protocol: TCP
+      port: 5432
+      targetPort: 5432
+  selector:
+    name: database
+  sessionAffinity: None
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: backend
+  labels:
+    app: backend
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/instance: backend
+    app.kubernetes.io/name: python
+    app.kubernetes.io/part-of: quotegen
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: '3.6'
+spec:
+  ports:
+    - name: 8080-tcp
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: backend
+    deploymentconfig: backend
+  sessionAffinity: None
+---
+kind: DeploymentConfig
+apiVersion: apps.openshift.io/v1
+metadata:
+  name: database
+  labels:
+    app: database
+    app.kubernetes.io/component: database
+    app.kubernetes.io/instance: database
+    app.kubernetes.io/name: database
+    app.kubernetes.io/part-of: quotegen
+    app.openshift.io/version: 'latest'
+spec:
+  strategy:
+    type: Recreate
+    recreateParams:
+      timeoutSeconds: 600
+    activeDeadlineSeconds: 21600
+  triggers:
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+          - database
+        from:
+          kind: ImageStreamTag
+          namespace: openshift
+          name: 'postgresql:latest'
+    - type: ConfigChange
+  replicas: 1
+  revisionHistoryLimit: 10
+  test: false
+  selector:
+    name: database
+  template:
+    metadata:
+      labels:
+        name: database
+    spec:
+      volumes:
+        - name: database-data
+          emptyDir: {}
+      containers:
+        - resources:
+            limits:
+              memory: 512Mi
+          readinessProbe:
+            exec:
+              command:
+                - /usr/libexec/check-container
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: database
+          livenessProbe:
+            exec:
+              command:
+                - /usr/libexec/check-container
+                - '--live'
+            initialDelaySeconds: 120
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          env:
+            - name: POSTGRESQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: database-user
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: database-password
+            - name: POSTGRESQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: database-name
+          securityContext:
+            capabilities: {}
+            privileged: false
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: database-data
+              mountPath: /var/lib/pgsql/data
+          terminationMessagePolicy: File
+          image: ''
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+---
+kind: DeploymentConfig
+apiVersion: apps.openshift.io/v1
+metadata:
+  annotations:
+    app.openshift.io/vcs-ref: master
+    app.openshift.io/vcs-uri: 'https://github.com/snowjet/demo-quote-gen'
+    app.openshift.io/connects-to: 'database'
+  name: backend
+  labels:
+    app: backend
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/instance: backend
+    app.kubernetes.io/name: python
+    app.kubernetes.io/part-of: quotegen
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: '3.8'
+spec:
+  strategy:
+    type: Rolling
+    rollingParams:
+      updatePeriodSeconds: 1
+      intervalSeconds: 1
+      timeoutSeconds: 600
+      maxUnavailable: 25%
+      maxSurge: 25%
+    activeDeadlineSeconds: 21600
+  triggers:
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+          - backend
+        from:
+          kind: ImageStreamTag
+          name: 'backend:latest'
+    - type: ConfigChange
+  replicas: 1
+  revisionHistoryLimit: 10
+  test: false
+  selector:
+    app: backend
+    deploymentconfig: backend
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: backend
+        deploymentconfig: backend
+    spec:
+      containers:
+        - name: backend
+          image: ''
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+          env:
+            - name: database-user
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: database-user
+            - name: database-password
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: database-password
+            - name: database-name
+              valueFrom:
+                secretKeyRef:
+                  name: database
+                  key: database-name
+          envFrom:
+            - configMapRef:
+                name: cfgmap-backend   
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler      

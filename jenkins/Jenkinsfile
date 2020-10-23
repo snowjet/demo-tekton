@@ -1,0 +1,101 @@
+pipeline {
+  agent {
+    kubernetes {
+      label "jenkins-agent-python"
+      cloud "openshift"
+    }
+  }
+  environment { 
+    // Tags
+    imageName   = "backend"
+    sourceCode  = "https://github.com/snowjet/demo-quote-gen.git"
+    prodTag     = "0.0"
+    project     = "pipes"
+    // sourceCode = "${sourceCode}"
+
+  }
+  stages {
+    // Checkout Source Code.
+    stage('Checkout Source') {
+      steps {
+        git branch: 'master',
+            url: sourceCode
+
+        script {
+          prodTag  = currentBuild.number
+        }
+        
+      }
+    }
+
+    // Test
+    stage('Test Code') {
+      steps {
+        dir('quotegen') {
+          script {
+
+            echo "Install Deps"
+            sh "pip install --upgrade pip wheel pytest"
+            sh "pip install -r requirements.txt"
+
+            echo "Run PyTest"
+            def DATABASE_TYPE = "sqlite"
+            sh "python -m pytest -s -v"
+
+          }
+        }
+      }
+    }
+
+    // Build the OpenShift Image in OpenShift and tag it.
+    stage('Build and Tag OpenShift Image') {
+      steps {
+        dir('openshift-backend') {
+          echo "Building OpenShift container image ${imageName}:${prodTag}"
+
+          script {
+            // TBD: Build Image (binary build), tag Image
+            //      Make sure the image name is correct in the tag!
+              openshift.withCluster() {
+                openshift.withProject() {
+                  openshift.selector("bc", "backend").startBuild("--wait=true")
+                  openshift.tag("${imageName}:latest", "${imageName}:${prodTag}")
+                }
+              }
+          }
+          }
+      }
+    }
+
+    stage('Deploy to Prod') {
+      steps {
+        dir('openshift-backend') {
+          echo "Deploying container image to Prod"
+          script {
+
+              openshift.withProject("${project}") {
+                // OpenShift 4
+                openshift.set("image", "dc/backend", "backend=image-registry.openshift-image-registry.svc:5000/${project}/${imageName}:${prodTag}")
+                openshift.set("env", "dc/backend", "VERSION='${prodTag}'")
+
+                // Deploy the development application.
+                openshift.selector("dc", "backend").rollout().latest();
+
+                // Wait for application to be deployed
+                sleep 5
+                def dc = openshift.selector("dc", "backend").object()
+                def dc_version = dc.status.latestVersion
+                def rc = openshift.selector("rc", "backend-${dc_version}").object()
+
+                echo "Waiting for ReplicationController backend-${dc_version} to be ready"
+                while (rc.spec.replicas != rc.status.readyReplicas) {
+                  sleep 5
+                  rc = openshift.selector("rc", "backend-${dc_version}").object()
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+}

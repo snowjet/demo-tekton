@@ -1,0 +1,17 @@
+---
+kind: ImageStream
+apiVersion: image.openshift.io/v1
+metadata:
+  name: imagelookup
+  labels:
+    app: imagelookup
+    app.kubernetes.io/component: imagelookup
+    app.kubernetes.io/instance: imagelookup
+    app.kubernetes.io/name: python
+    app.kubernetes.io/part-of: imagelookup
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: '3.8'  
+spec:
+  lookupPolicy:
+    local: false
+  dockerImageRepository: quay.io/rnagalin/quotegen-imagelookup

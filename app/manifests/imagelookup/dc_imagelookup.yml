@@ -1,0 +1,64 @@
+kind: DeploymentConfig
+apiVersion: apps.openshift.io/v1
+metadata:
+  annotations:
+    app.openshift.io/vcs-ref: master
+    app.openshift.io/vcs-uri: 'https://github.com/snowjet/quotegen-imagelookup.git'
+  name: imagelookup
+  labels:
+    app: imagelookup
+    app.kubernetes.io/component: imagelookup
+    app.kubernetes.io/instance: imagelookup
+    app.kubernetes.io/part-of: quotegen
+    app.kubernetes.io/name: python
+    app.kubernetes.io/part-of: quotegen
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: '3.8'    
+spec:
+  strategy:
+    type: Rolling
+    rollingParams:
+      updatePeriodSeconds: 1
+      intervalSeconds: 1
+      timeoutSeconds: 600
+      maxUnavailable: 25%
+      maxSurge: 25%
+    resources: {}
+    activeDeadlineSeconds: 21600
+  triggers:
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+          - imagelookup
+        from:
+          kind: ImageStreamTag
+          name: 'imagelookup:latest'
+    - type: ConfigChange
+  replicas: 1
+  revisionHistoryLimit: 10
+  test: false
+  selector:
+    app: imagelookup
+    deploymentconfig: imagelookup
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: imagelookup
+        deploymentconfig: imagelookup
+    spec:
+      containers:
+        - name: imagelookup
+          image: 'imagelookup:latest'
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: cfgmap-imagelookup              
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cfgmap-imagelookup
+data:
+  API_V1_STR: /api/v1
+  PROJECT_NAME: ImageLookup Service
+  log_level: INFO

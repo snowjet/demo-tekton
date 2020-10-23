@@ -1,0 +1,6 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: jenkins-agent-python
+spec:
+  dockerImageRespository: jenkins/jnlp-agent-python

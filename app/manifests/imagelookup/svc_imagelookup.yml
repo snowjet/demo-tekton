@@ -1,0 +1,23 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: imagelookup
+  labels:
+    app: imagelookup
+    app.kubernetes.io/component: imagelookup
+    app.kubernetes.io/instance: imagelookup
+    app.kubernetes.io/name: python
+    app.kubernetes.io/part-of: imagelookup
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: '3.8'
+spec:
+  ports:
+    - name: 8080-tcp
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: imagelookup
+    deploymentconfig: imagelookup
+  sessionAffinity: None

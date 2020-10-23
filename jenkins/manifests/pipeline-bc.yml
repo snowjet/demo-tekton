@@ -1,0 +1,19 @@
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: backend-pipeline
+  labels:
+    build: backend-pipeline
+spec:
+  strategy:
+    type: JenkinsPipeline
+    jenkinsPipelineStrategy:
+      jenkinsfilePath: Jenkinsfile
+  postCommit: {}
+  source:
+    type: Git
+    git:
+      uri: ${REPO}        
+      ref: master
+    contextDir: jenkins
+  runPolicy: Serial
