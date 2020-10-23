@@ -5,6 +5,8 @@ metadata:
   labels:
     build: backend-pipeline
 spec:
+  successfulBuildsHistoryLimit: 2
+  failedBuildsHistoryLimit: 2  
   strategy:
     type: JenkinsPipeline
     jenkinsPipelineStrategy:
@@ -14,6 +16,6 @@ spec:
     type: Git
     git:
       uri: https://github.com/snowjet/demo-tekton.git       
-      ref: master
+      ref: main
     contextDir: jenkins
   runPolicy: Serial
