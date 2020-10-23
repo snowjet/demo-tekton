@@ -3,4 +3,5 @@ kind: ImageStream
 metadata:
   name: jenkins-agent-python
 spec:
-  dockerImageRespository: jenkins/jnlp-agent-python
+  dockerImageRepository: quay.io/rnagalin/jnlp-agent-python
+

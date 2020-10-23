@@ -8,13 +8,11 @@ oc new-app -n ${PROJECT} \
 
 oc set resources DeploymentConfigs jenkins --limits=cpu=2,memory=2Gi --requests=cpu=500m,memory=1Gi -n ${PROJECT}
 
-# cat ./jenkins/Dockerfiles/agent.Dockerfile | oc new-build --strategy=docker -D '-' --name=jnlp-agent-python -n ${PROJECT}
-
 oc apply -f ./jenkins/manifests/pipeline-bc.yml -n ${PROJECT}
 oc apply -f ./jenkins/manifests/is-jnlp-agent-python.yml -n ${PROJECT}
 
 # Set up ConfigMap with Jenkins Agent definition
-oc create -f ./manifests/agent-cm.yml -n ${PROJECT}
+oc create -f ./jenkins/manifests/agent-cm.yml -n ${PROJECT}
 
 # ========================================
 # No changes are necessary below this line
