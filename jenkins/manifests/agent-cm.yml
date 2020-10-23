@@ -25,13 +25,13 @@ data:
       </workspaceVolume>
       <containers>
         <org.csanchez.jenkins.plugins.kubernetes.ContainerTemplate>
-          <name>jnlp</name>
-          <image>image-registry.openshift-image-registry.svc:5000/pipes/jenkins-agent-python:latest</image>
+          <name>python</name>
+          <image>registry.access.redhat.com/ubi8/python-38</image>
           <privileged>false</privileged>
           <alwaysPullImage>true</alwaysPullImage>
           <workingDir>/tmp</workingDir>
-          <command></command>
-          <args>${computer.jnlpmac} ${computer.name}</args>
+          <command>/bin/sh -c</command>
+          <args>cat</args>
           <ttyEnabled>false</ttyEnabled>
           <resourceRequestCpu>2</resourceRequestCpu>
           <resourceRequestMemory>2048Mi</resourceRequestMemory>

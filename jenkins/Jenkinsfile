@@ -19,7 +19,7 @@ pipeline {
     stage('Checkout Source') {
       steps {
         container("python") {
-        git branch: 'main',
+        git branch: 'master',
             url: sourceCode
 
         script {
