@@ -26,6 +26,6 @@ spec:
     git:
       uri: 'https://github.com/snowjet/demo-quote-gen.git'
       ref: master
-    contextDir: quotgen
+    contextDir: quotegen
   triggers: []
   runPolicy: Serial
