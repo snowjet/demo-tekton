@@ -18,19 +18,21 @@ pipeline {
     // Checkout Source Code.
     stage('Checkout Source') {
       steps {
+        container("python") {
         git branch: 'main',
             url: sourceCode
 
         script {
           prodTag  = currentBuild.number
         }
-        
+        }
       }
     }
 
     // Test
     stage('Test Code') {
       steps {
+        container("python") {
         dir('quotegen') {
           script {
 
@@ -45,11 +47,13 @@ pipeline {
           }
         }
       }
+      }
     }
 
     // Build the OpenShift Image in OpenShift and tag it.
     stage('Build and Tag OpenShift Image') {
       steps {
+        container("python") {
         dir('openshift-backend') {
           echo "Building OpenShift container image ${imageName}:${prodTag}"
 
@@ -64,11 +68,13 @@ pipeline {
               }
           }
           }
+        }
       }
     }
 
     stage('Deploy to Prod') {
       steps {
+        container("python") {
         dir('openshift-backend') {
           echo "Deploying container image to Prod"
           script {
@@ -96,6 +102,7 @@ pipeline {
             }
           }
         }
+      }
       }
     }
 }
