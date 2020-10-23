@@ -55,7 +55,6 @@ pipeline {
     // Build the OpenShift Image in OpenShift and tag it.
     stage('Build and Tag OpenShift Image') {
       steps {
-        dir('openshift-backend') {
           echo "Building OpenShift container image ${imageName}:${prodTag}"
 
           script {
@@ -68,13 +67,11 @@ pipeline {
                 }
               }
           }
-          }
       }
     }
 
     stage('Deploy to Prod') {
       steps {
-        dir('openshift-backend') {
           echo "Deploying container image to Prod"
           script {
 
@@ -99,7 +96,6 @@ pipeline {
                 }
               }
             }
-          }
       }
       }
     }
