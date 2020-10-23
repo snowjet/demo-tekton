@@ -5,6 +5,10 @@ FROM registry.access.redhat.com/ubi8/ubi
 COPY --from=jenkins-base /usr/bin/go-init /usr/bin/go-init
 COPY --from=jenkins-base /usr/local/bin /usr/local/bin
 
+ENV HOME=/home/jenkins \
+    LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8
+
 USER root
 # Install headless Java
 RUN INSTALL_PKGS="bc gettext git java-11-openjdk-headless java-1.8.0-openjdk-headless lsof rsync tar unzip which zip bzip2 jq" && \
