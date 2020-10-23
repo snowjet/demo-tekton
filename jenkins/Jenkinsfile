@@ -35,12 +35,12 @@ pipeline {
           script {
 
             echo "Install Deps"
-            sh "pip install --upgrade pip wheel pytest"
-            sh "pip install -r requirements.txt"
+            sh "pip3 install --upgrade pip wheel pytest"
+            sh "pip3 install -r requirements.txt"
 
             echo "Run PyTest"
             def DATABASE_TYPE = "sqlite"
-            sh "python -m pytest -s -v"
+            sh "python3 -m pytest -s -v"
 
           }
         }

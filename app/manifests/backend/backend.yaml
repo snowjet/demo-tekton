@@ -229,7 +229,6 @@ spec:
     deploymentconfig: backend
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: backend
         deploymentconfig: backend
