@@ -38,6 +38,8 @@ pipeline {
 
             echo "Install Deps"
             sh "pip3 install --upgrade pip wheel pytest"
+            sh "pwd"
+            sh "ls -alR"
             sh "pip3 install -r requirements.txt"
 
             echo "Run PyTest"
