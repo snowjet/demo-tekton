@@ -35,6 +35,7 @@ pipeline {
           script {
 
             echo "Install Deps"
+            sh "apk add --update --no-cache py3-pip"
             sh "pip install --upgrade pip wheel pytest"
             sh "pip install -r requirements.txt"
 
