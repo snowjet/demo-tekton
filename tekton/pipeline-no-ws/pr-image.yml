@@ -1,0 +1,10 @@
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: image-backend
+spec:
+  params:
+    - name: url
+      value: image-registry.openshift-image-registry.svc:5000/${PROJECT}/backend
+  type: image

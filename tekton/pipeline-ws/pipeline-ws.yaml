@@ -1,0 +1,140 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  generation: 1
+  labels:
+    pipeline.openshift.io/runtime: python
+    pipeline.openshift.io/type: openshift
+  name: quotegen-ws
+spec:
+  params:
+    - default: quotegen
+      description: name of DeploymentConfig
+      name: DC_NAME
+      type: string
+  resources:
+  resources:
+    - name: app-source
+      type: git
+    - name: app-image
+      type: image
+  tasks:
+    - name: pytest-sqlite-ws
+      params:
+        - name: pythonImage
+          value: registry.redhat.io/rhel8/python-38
+        - name: ARGS
+          value: '-s -v'
+        - name: SOURCE_PATH
+          value: quotegen
+        - name: REQUIREMENTS_FILE
+          value: requirements.txt
+      runAfter:
+        - cache-pypi-ws
+      taskRef:
+        kind: Task
+        name: pytest-sqlite-ws
+      workspaces:
+        - name: source
+          workspace: workspace
+    - name: build
+      params:
+        - name: IMAGE
+          value: >-
+            image-registry.openshift-image-registry.svc:5000/quote-pipeline/quotegen
+        - name: BUILDER_IMAGE
+          value: registry.redhat.io/rhel8/buildah
+        - name: STORAGE_DRIVER
+          value: overlay
+        - name: DOCKERFILE
+          value: ./Containerfile-ws
+        - name: CONTEXT
+          value: .
+        - name: TLSVERIFY
+          value: 'false'
+        - name: FORMAT
+          value: oci
+      runAfter:
+        - pytest-sqlite-ws
+        - pytest-postgres-ws
+      taskRef:
+        kind: ClusterTask
+        name: buildah
+      workspaces:
+        - name: source
+          workspace: workspace
+    - name: git-clone
+      params:
+        - name: url
+          value: 'https://github.com/snowjet/demo-quote-gen.git'
+        - name: revision
+          value: sql
+        - name: submodules
+          value: 'true'
+        - name: depth
+          value: '1'
+        - name: sslVerify
+          value: 'true'
+        - name: deleteExisting
+          value: 'true'
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: workspace
+    - name: pytest-postgres-ws
+      params:
+        - name: pythonImage
+          value: registry.redhat.io/rhel8/python-38
+        - name: ARGS
+          value: '-s -v'
+        - name: SOURCE_PATH
+          value: quotegen
+        - name: REQUIREMENTS_FILE
+          value: requirements.txt
+        - name: POSTGRES_USER
+          value: user
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: POSTGRES_DB
+          value: quotes
+      runAfter:
+        - cache-pypi-ws
+      taskRef:
+        kind: Task
+        name: pytest-postgres-ws
+      workspaces:
+        - name: source
+          workspace: workspace
+    - name: cache-pypi-ws
+      params:
+        - name: pythonImage
+          value: registry.redhat.io/rhel8/python-38
+        - name: SOURCE_PATH
+          value: quotegen
+        - name: REQUIREMENTS_FILE
+          value: requirements.txt
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: Task
+        name: cache-pypi-ws
+      workspaces:
+        - name: source
+          workspace: workspace
+    - name: deploy
+      params:
+        - name: ARGS
+          value:
+            - rollout
+            - status
+            - dc/$(params.DC_NAME)
+      runAfter:
+        - build
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+  workspaces:
+    - name: workspace

@@ -1,0 +1,93 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  generation: 1
+  labels:
+    pipeline.openshift.io/runtime: python
+    pipeline.openshift.io/type: openshift
+  name: quotegen
+spec:
+  params:
+    - default: backend
+      description: name of DeploymentConfig
+      name: DC_NAME
+      type: string
+  resources:
+    - name: app-source
+      type: git
+    - name: app-image
+      type: image
+  tasks:
+    - name: pytest-sqlite
+      params:
+        - name: pythonImage
+          value: registry.redhat.io/rhel8/python-38
+        - name: SOURCE_PATH
+          value: quotegen
+        - name: REQUIREMENTS_FILE
+          value: requirements.txt
+      resources:
+        inputs:
+          - name: source
+            resource: app-source
+      taskRef:
+        kind: Task
+        name: pytest-sqlite
+    - name: build
+      params:
+        - name: BUILDER_IMAGE
+          value: registry.redhat.io/rhel8/buildah
+        - name: DOCKERFILE
+          value: ./Containerfile
+        - name: CONTEXT
+          value: .
+        - name: TLSVERIFY
+          value: 'false'
+        - name: FORMAT
+          value: oci
+      resources:
+        inputs:
+          - name: source
+            resource: app-source
+        outputs:
+          - name: image
+            resource: app-image
+      runAfter:
+        - pytest-sqlite
+        - pytest-postgres
+      taskRef:
+        kind: ClusterTask
+        name: buildah
+    - name: pytest-postgres
+      params:
+        - name: pythonImage
+          value: registry.redhat.io/rhel8/python-38
+        - name: SOURCE_PATH
+          value: quotegen
+        - name: REQUIREMENTS_FILE
+          value: requirements.txt
+        - name: POSTGRES_USER
+          value: user
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: POSTGRES_DB
+          value: quotes
+      resources:
+        inputs:
+          - name: source
+            resource: app-source
+      taskRef:
+        kind: Task
+        name: pytest-postgres
+    - name: deploy
+      params:
+        - name: ARGS
+          value:
+            - rollout
+            - status
+            - dc/$(params.DC_NAME)
+      runAfter:
+        - build
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client

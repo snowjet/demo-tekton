@@ -20,7 +20,42 @@ metadata:
     app.kubernetes.io/name: python
     app.kubernetes.io/part-of: quotegen
     app.openshift.io/runtime: python
-    app.openshift.io/runtime-version: '3.6'
+    app.openshift.io/runtime-version: '3.8'
+---
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: backend
+  labels:
+    app: backend
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/instance: backend
+    app.kubernetes.io/name: python
+    app.kubernetes.io/part-of: quotegen
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: '3.8'
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'backend:latest'
+  strategy:
+    type: Source
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        namespace: openshift
+        name: 'python:latest'
+  source:
+    type: Git
+    git:
+      uri: 'https://github.com/snowjet/demo-quote-gen.git'
+      ref: master
+    contextDir: quotegen
+  triggers:
+    - type: ImageChange
+      imageChange: {}
+    - type: ConfigChange
 ---
 apiVersion: v1
 kind: Secret

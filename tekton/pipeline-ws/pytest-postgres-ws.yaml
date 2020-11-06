@@ -1,0 +1,83 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: pytest-postgres-ws
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/tags: python, pytest, postgres
+    tekton.dev/displayName: pytest-postgres
+spec:
+  description: >-
+    This task will run pytest on the provided input.
+  params:
+    - name: pythonImage
+      description: python image to use to run pytest
+      type: string
+      default: registry.redhat.io/rhel8/python-38
+    - name: ARGS
+      description: The additional arguments to be used with pytest
+      type: string
+      default: "-s -v"
+    - name: SOURCE_PATH
+      description: The path to the source code
+      default: "."
+    - name: REQUIREMENTS_FILE
+      description: The name of the requirements file inside the source location
+      default: "requirements.txt"
+    - name: POSTGRES_USER
+      description: Username for postgres user
+      default: user
+    - name: POSTGRES_PASSWORD
+      description: Password for postgres password
+      default: postgres
+    - name: POSTGRES_DB
+      description: Password for postgres database
+      default: quotes       
+  sidecars:
+    - name: postgres
+      image: registry.redhat.io/rhel8/postgresql-12
+      env:    
+        - value: $(params.POSTGRES_USER)
+          name: POSTGRESQL_USER
+        - value: $(params.POSTGRES_PASSWORD)
+          name: POSTGRESQL_PASSWORD
+        - value: $(params.POSTGRES_DB)
+          name: POSTGRESQL_DATABASE
+      volumeMounts:
+        - mountPath: /var/lib/pgsql/data
+          name: pg-storage
+  steps:
+    - name: unit-test-with-db
+      image: $(params.pythonImage)
+      script: |
+        export PATH=$PATH:$HOME/.local/bin
+
+        pip install --upgrade pip wheel
+
+        if [ -e "$(inputs.params.SOURCE_PATH)/$(inputs.params.REQUIREMENTS_FILE)" ];then
+          pip install --no-index --find-links=./pypi --cache-dir ./pycache -r $(inputs.params.SOURCE_PATH)/$(inputs.params.REQUIREMENTS_FILE) 
+        fi
+
+        pip install --no-index --find-links=./pypi --cache-dir ./pycache pytest
+        
+        cd $(inputs.params.SOURCE_PATH)/
+        export DATABASE_TYPE="POSTGRESQL"
+        python -m pytest $(inputs.params.ARGS)
+      env:
+        - name: DATABASE_SERVICE_HOST
+          value: 127.0.0.1        
+        - value: $(params.POSTGRES_USER)
+          name: database-user
+        - value: $(params.POSTGRES_PASSWORD)
+          name: database-password
+        - value: $(params.POSTGRES_DB)
+          name: database-name
+      workingDir: $(workspaces.source.path)
+  workspaces:
+    - description: Expect git repo to be here
+      name: source
+  volumes:
+    - emptyDir: {}
+      name: pg-storage

@@ -1,0 +1,52 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: pytest-sqlite
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/tags: python, pytest, quotegen
+    tekton.dev/displayName: pytest-sqlite
+spec:
+  description: >-
+    This task will run pytest on the provided input.
+  params:
+    - name: pythonImage
+      description: python image to use to run pytest
+      type: string
+      default: registry.redhat.io/rhel8/python-38
+    - name: ARGS
+      description: The additional arguments to be used with pytest
+      type: string
+      default: "-s -v"
+    - name: SOURCE_PATH
+      description: The path to the source code
+      default: "."
+    - name: REQUIREMENTS_FILE
+      description: The name of the requirements file inside the source location
+      default: "requirements.txt"
+      type: string
+  resources:
+    inputs:
+      - name: source
+        type: git   
+  steps:
+    - name: unit-test
+      image: $(params.pythonImage)
+      script: |
+        export PATH=$PATH:$HOME/.local/bin
+        
+        pip install --upgrade pip wheel
+
+        if [ -e "$(inputs.params.SOURCE_PATH)/$(inputs.params.REQUIREMENTS_FILE)" ];then
+          pip install -r $(inputs.params.SOURCE_PATH)/$(inputs.params.REQUIREMENTS_FILE)
+        fi
+
+        pip install pytest
+        
+        cd $(inputs.params.SOURCE_PATH)/
+
+        export DATABASE_TYPE="sqlite"
+        python -m pytest $(inputs.params.ARGS)
+      workingDir: /workspace/source

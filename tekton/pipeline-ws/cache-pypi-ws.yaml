@@ -1,0 +1,42 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: cache-pypi-ws
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/tags: python, pypi
+    tekton.dev/displayName: cache-pypi-ws
+spec:
+  description: >-
+    This task will cache-pypi to speed up tests - stores the pypi in workspace named source
+  params:
+    - name: pythonImage
+      description: python image to run pip and cache pypi packages
+      type: string
+      default: registry.redhat.io/rhel8/python-38
+    - name: SOURCE_PATH
+      description: The path to the source code
+      default: "."
+    - name: REQUIREMENTS_FILE
+      description: The name of the requirements file inside the source location
+      default: "requirements.txt"
+  steps:
+    - name: cache-pypi 
+      image: $(params.pythonImage)
+      script: |
+        export PATH=$PATH:$HOME/.local/bin
+
+        pip install --upgrade pip
+        pip install wheel
+
+        if [ -e "$(inputs.params.SOURCE_PATH)/$(inputs.params.REQUIREMENTS_FILE)" ];then
+          pip wheel --wheel-dir ./pypi --cache-dir ./pycache -r $(inputs.params.SOURCE_PATH)/$(inputs.params.REQUIREMENTS_FILE)
+          pip wheel --wheel-dir ./pypi --cache-dir ./pycache pytest
+        fi
+
+      workingDir: $(workspaces.source.path)
+  workspaces:
+    - description: Expect git repo to be here
+      name: source

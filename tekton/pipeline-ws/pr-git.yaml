@@ -1,0 +1,12 @@
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: git-quotegen
+spec:
+  params:
+    - name: url
+      value: 'https://github.com/snowjet/demo-quote-gen.git'
+    - name: revision
+      value: master
+  type: git
