@@ -32,7 +32,7 @@ spec:
       - name: source
         type: git   
   steps:
-    - name: unit-test
+    - name: py-unit-test
       image: $(params.pythonImage)
       script: |
         export PATH=$PATH:$HOME/.local/bin
