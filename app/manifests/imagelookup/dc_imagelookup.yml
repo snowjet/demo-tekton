@@ -41,7 +41,6 @@ spec:
     deploymentconfig: imagelookup
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: imagelookup
         deploymentconfig: imagelookup
