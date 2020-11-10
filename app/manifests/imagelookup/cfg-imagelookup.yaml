@@ -2,6 +2,13 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: cfgmap-imagelookup
+  labels:
+    app: imagelookup
+    app.kubernetes.io/component: imagelookup
+    app.kubernetes.io/instance: imagelookup
+    app.kubernetes.io/part-of: imagelookup
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: '3.8'     
 data:
   API_V1_STR: /api/v1
   PROJECT_NAME: ImageLookup Service

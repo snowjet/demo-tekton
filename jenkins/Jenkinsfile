@@ -88,6 +88,7 @@ pipeline {
                 sleep 5
                 def dc = openshift.selector("dc", "backend").object()
                 def dc_version = dc.status.latestVersion
+                sleep 5
                 def rc = openshift.selector("rc", "backend-${dc_version}").object()
 
                 echo "Waiting for ReplicationController backend-${dc_version} to be ready"
