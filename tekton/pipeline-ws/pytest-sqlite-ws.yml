@@ -15,7 +15,7 @@ spec:
     - name: pythonImage
       description: python image to use to run pytest
       type: string
-      default: registry.redhat.io/rhel8/python-38
+      default: registry.access.redhat.com/ubi8/python-38
     - name: ARGS
       description: The additional arguments to be used with pytest
       type: string
@@ -26,11 +26,11 @@ spec:
     - name: REQUIREMENTS_FILE
       description: The name of the requirements file inside the source location
       default: "requirements.txt"
-  steps:
+  steps: 
     - name: unit-test
       image: $(params.pythonImage)
       script: |
-        export PATH=$PATH:$HOME/.local/bin
+        export PATH=${PATH}:${HOME}/.local/bin
 
         pip install --upgrade pip wheel
 

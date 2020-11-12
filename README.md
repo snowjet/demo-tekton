@@ -24,7 +24,7 @@ The pipeline below only clones the repo once and pypi modules oncce. This is the
 Install the pipelines with workspaces:
 ```bash
 export PROJECT="pipes"
-cat ./tekton/pipeline-ws/*.yml | envsubst | oc apply -f -
+cat ./tekton/pipeline-ws/*.yml | envsubst '${PROJECT}' |oc apply -n ${PROJECT} -f -
 ```
 ### Pipelines with no caching
 The pipeline below needs to clone and download the pypi modules 3 times, once for each pytest and again for the build. 
@@ -34,7 +34,7 @@ The pipeline below needs to clone and download the pypi modules 3 times, once fo
 Install the pipelines without workspaces:
 ```bash 
 export PROJECT="pipes"
-cat ./tekton/pipeline-no-ws/*.yml | envsubst | oc apply -f -
+cat ./tekton/pipeline-no-ws/*.yml | envsubst '${PROJECT}' | oc apply -n ${PROJECT} -f -
 ```
 
 ## Application
@@ -46,10 +46,10 @@ export POSTGRESQL_USER="user"
 export POSTGRESQL_PASSWORD="`head /dev/urandom | tr -dc A-Za-z0-9 | head -c 13 ; echo ''`"
 export external_imape_base_url="http://imagelookup.${PROJECT}.svc.cluster.local:8080"
 
-cat ./app/manifests/backend/backend.yml | envsubst | oc apply -f -
+cat ./app/manifests/backend/backend.yml | envsubst '${PROJECT} ${external_imape_base_url} ${POSTGRESQL_DATABASE} ${POSTGRESQL_USER} ${POSTGRESQL_PASSWORD}' | oc apply -n ${PROJECT} -f -
 
-oc apply -f ./app/manifests/frontend
-oc apply -f ./app/manifests/imagelookup
+cat ./app/manifests/frontend/*.yml | envsubst '${PROJECT}' | oc apply -n ${PROJECT} -f -
+oc apply -f ./app/manifests/imagelookup  -n ${PROJECT}
 
-oc expose svc/frontend
+oc expose svc/frontend  -n ${PROJECT}
 ```

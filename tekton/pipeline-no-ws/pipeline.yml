@@ -22,7 +22,7 @@ spec:
     - name: pytest-sqlite
       params:
         - name: pythonImage
-          value: registry.redhat.io/ubi8/python-38
+          value: registry.access.redhat.com/ubi8/python-38
         - name: SOURCE_PATH
           value: quotegen
         - name: REQUIREMENTS_FILE
@@ -62,7 +62,7 @@ spec:
     - name: pytest-postgres
       params:
         - name: pythonImage
-          value: registry.redhat.io/ubi8/python-38
+          value: registry.access.redhat.com/ubi8/python-38
         - name: SOURCE_PATH
           value: quotegen
         - name: REQUIREMENTS_FILE

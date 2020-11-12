@@ -2,18 +2,16 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  generation: 1
   labels:
     pipeline.openshift.io/runtime: python
     pipeline.openshift.io/type: openshift
-  name: quotegen-ws
+  name: backend-ws
 spec:
   params:
     - default: quotegen
       description: name of DeploymentConfig
       name: DC_NAME
       type: string
-  resources:
   resources:
     - name: app-source
       type: git
@@ -23,7 +21,7 @@ spec:
     - name: pytest-sqlite-ws
       params:
         - name: pythonImage
-          value: registry.redhat.io/rhel8/python-38
+          value: registry.access.redhat.com/ubi8/python-38
         - name: ARGS
           value: '-s -v'
         - name: SOURCE_PATH
@@ -40,13 +38,8 @@ spec:
           workspace: workspace
     - name: build
       params:
-        - name: IMAGE
-          value: >-
-            image-registry.openshift-image-registry.svc:5000/quote-pipeline/quotegen
         - name: BUILDER_IMAGE
           value: registry.redhat.io/rhel8/buildah
-        - name: STORAGE_DRIVER
-          value: overlay
         - name: DOCKERFILE
           value: ./Containerfile-ws
         - name: CONTEXT
@@ -55,15 +48,17 @@ spec:
           value: 'false'
         - name: FORMAT
           value: oci
+        - name: IMAGE
+          value: 'image-registry.openshift-image-registry.svc:5000/${PROJECT}/backend'
+      workspaces:
+        - name: source
+          workspace: workspace
       runAfter:
         - pytest-sqlite-ws
         - pytest-postgres-ws
       taskRef:
         kind: ClusterTask
         name: buildah
-      workspaces:
-        - name: source
-          workspace: workspace
     - name: git-clone
       params:
         - name: url
@@ -87,7 +82,7 @@ spec:
     - name: pytest-postgres-ws
       params:
         - name: pythonImage
-          value: registry.redhat.io/rhel8/python-38
+          value: registry.access.redhat.com/ubi8/python-38
         - name: ARGS
           value: '-s -v'
         - name: SOURCE_PATH

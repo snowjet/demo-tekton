@@ -1,0 +1,28 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: backend-ws-
+  labels:
+    pipeline.openshift.io/runtime: python
+    pipeline.openshift.io/type: openshift
+    tekton.dev/pipeline: backend-ws
+spec:
+  params:
+    - name: DC_NAME
+      value: backend
+  pipelineRef:
+    name: backend-ws
+  resources:
+    - name: app-source
+      resourceRef:
+        name: git-quotegen
+    - name: app-image
+      resourceRef:
+        name: image-backend
+  serviceAccountName: pipeline
+  timeout: 1h0m0s
+  workspaces:
+    - name: workspace
+      persistentVolumeClaim:
+        claimName: wout
