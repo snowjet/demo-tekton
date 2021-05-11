@@ -10,6 +10,7 @@ Deploy a complete application that has a frontend, backend, database and an "ext
 export PROJECT="quoter"
 
 bash ./create_app.sh
+bash ./create_tekton.sh
 ```
 
 
