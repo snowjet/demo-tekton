@@ -8,7 +8,7 @@ metadata:
   name: backend-ws
 spec:
   params:
-    - default: quotegen
+    - default: backend
       description: name of DeploymentConfig
       name: DC_NAME
       type: string
@@ -64,7 +64,7 @@ spec:
         - name: url
           value: 'https://github.com/snowjet/demo-quote-gen.git'
         - name: revision
-          value: sql
+          value: apiv1
         - name: submodules
           value: 'true'
         - name: depth
