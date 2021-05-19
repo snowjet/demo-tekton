@@ -1,10 +1,19 @@
 #!/bin/bash
 
+if [[ -z $1 ]] && [[ -z $PROJECT ]]; then
+    echo "Pass project into script of set PROJECT env var"
+    exit 1
+fi
+
+if [[ -z $PROJECT ]]; then
+   export PROJECT="${1}"
+fi
+
 oc new-app -n ${PROJECT} \
  -p DISABLE_ADMINISTRATIVE_MONITORS=true \
  -p MEMORY_LIMIT=2Gi \
  -p VOLUME_CAPACITY=4Gi \
- jenkins-persistent 
+ jenkins-persistent
 
 oc set resources DeploymentConfigs jenkins --limits=cpu=2,memory=2Gi --requests=cpu=500m,memory=1Gi -n ${PROJECT}
 
